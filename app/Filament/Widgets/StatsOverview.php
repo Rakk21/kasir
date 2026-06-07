@@ -5,38 +5,49 @@ namespace App\Filament\Widgets;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use App\Models\Transaction;
+use Carbon\Carbon; // Wajib import Carbon untuk manipulasi waktu
 
 class StatsOverview extends BaseWidget
 {
-    // Mengatur urutan agar tampil di paling atas
     protected static ?int $sort = 1; 
+
+    // Fitur MAGIC: Auto-refresh data setiap 10 detik tanpa reload halaman!
+    protected  ?string $pollingInterval = '10s'; 
 
     protected function getStats(): array
     {
-        // 1. Hitung total pendapatan dari seluruh transaksi
-        $totalPendapatan = Transaction::sum('total');
+        // Tetapkan batas waktu HARI INI (mulai dari jam 00:00:00)
+        $hariIni = Carbon::today();
 
-        // 2. Hitung jumlah struk/transaksi yang terjadi
-        $totalTransaksi = Transaction::count();
+        // 1. Hitung Pendapatan HARI INI
+        $pendapatanHariIni = Transaction::whereDate('created_at', $hariIni)
+                                        ->where('payment_status', 'paid')
+                                        ->sum('total');
+
+        // 2. Hitung Transaksi HARI INI
+        $transaksiHariIni = Transaction::whereDate('created_at', $hariIni)
+                                       ->count();
+
+        // 3. Hitung Pendapatan BULAN INI (sebagai perbandingan)
+        $pendapatanBulanIni = Transaction::whereMonth('created_at', Carbon::now()->month)
+                                         ->whereYear('created_at', Carbon::now()->year)
+                                         ->where('payment_status', 'paid')
+                                         ->sum('total');
 
         return [
-            Stat::make('Total Pendapatan', 'Rp ' . number_format($totalPendapatan, 0, ',', '.'))
-                ->description('Seluruh uang masuk')
+            Stat::make('Pendapatan Hari Ini', 'Rp ' . number_format($pendapatanHariIni, 0, ',', '.'))
+                ->description('Reset otomatis tiap jam 12 malam')
                 ->descriptionIcon('heroicon-m-arrow-trending-up')
                 ->color('success'),
 
-            Stat::make('Total Transaksi', $totalTransaksi . ' Struk')
-                ->description('Total penjualan tercatat')
-                ->descriptionIcon('heroicon-m-shopping-bag')
+            Stat::make('Transaksi Hari Ini', $transaksiHariIni . ' Struk')
+                ->description('Penjualan tanggal ' . $hariIni->format('d M Y'))
                 ->color('primary'),
 
-            // Kalau kamu punya tabel/Model Customer, kamu bisa aktifkan kode di bawah ini:
-            /*
-            Stat::make('Total Pelanggan', \App\Models\Customer::count() . ' Orang')
-                ->description('Pelanggan terdaftar')
-                ->descriptionIcon('heroicon-m-user-group')
+            Stat::make('Total Bulan Ini', 'Rp ' . number_format($pendapatanBulanIni, 0, ',', '.'))
+                ->description('Akumulasi bulan ' . Carbon::now()->format('F'))
+                ->descriptionIcon('heroicon-m-banknotes')
                 ->color('info'),
-            */
         ];
     }
 }
