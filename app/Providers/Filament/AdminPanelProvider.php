@@ -25,24 +25,30 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class AdminPanelProvider extends PanelProvider
 {
-    public function panel(Panel $panel): Panel
+   public function panel(Panel $panel): Panel
     {
         return $panel
             ->default()
             ->id('admin')
             ->path('admin')
             ->login()
-            ->brandName('Aplikasi POS Kasir') 
-            ->font('Poppins') 
+            
+            // Konfigurasi Notifikasi
+            ->databaseNotifications()
+            ->databaseNotificationsPolling('5s')
 
-            // Pengaturan Tema Warna
+            // Branding & UI
+            ->brandName('Aplikasi POS Kasir')
+            ->font('Poppins')
             ->colors([
                 'primary' => Color::Blue,
                 'danger' => Color::Red,
                 'success' => Color::Emerald,
                 'warning' => Color::Orange,
                 'gray' => Color::Slate,
-            ]) // Selesai konfigurasi colors, kurung ditutup di sini
+            ])
+    
+             // Selesai konfigurasi colors, kurung ditutup di sini
 
             // Efek Glassmorphism halaman Login
        // Efek Animasi Premium & Glassmorphism halaman Login
@@ -101,9 +107,70 @@ class AdminPanelProvider extends PanelProvider
                     </style>
                 ')
             )
+            // Efek Custom Tema "Dark Sidebar" Premium
+          // Efek Custom Tema "Dark Sidebar" Premium
+         // Efek Custom Tema "Dark Sidebar" Premium
+         // Efek Custom Tema "Dark Sidebar" Premium
+            ->renderHook(
+                PanelsRenderHook::HEAD_END, 
+                fn (): string => Blade::render('
+                    <style>
+                        /* 1. Background Sidebar & Header Dark Navy */
+                        .fi-sidebar, .fi-sidebar-header {
+                            background-color: #0f172a !important; 
+                        }
 
+                        /* 2. Judul Kategori (Master Data, dll) */
+                        .fi-sidebar-group-label {
+                            color: #94a3b8 !important; 
+                        }
+
+                        /* 3. Reset Background Menu Biasa */
+                        .fi-sidebar-item a, 
+                        .fi-sidebar-item button {
+                            background-color: transparent !important;
+                        }
+                        
+                        /* Warna Teks Menu Biasa */
+                        .fi-sidebar-item a *, 
+                        .fi-sidebar-item button * {
+                            color: #cbd5e1 !important;
+                        }
+
+                        /* 4. FIX UNTUK FILAMENT V3: Menu AKTIF */
+                        .fi-sidebar-item.fi-active > a, 
+                        .fi-sidebar-item.fi-active > button {
+                            background-color: #2563eb !important; /* Kotak biru */
+                            border-radius: 0.5rem !important;
+                            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.4) !important;
+                        }
+                        /* Paksa isi menu aktif jadi putih */
+                        .fi-sidebar-item.fi-active > a *, 
+                        .fi-sidebar-item.fi-active > button * {
+                            color: #ffffff !important; 
+                            font-weight: 600 !important;
+                        }
+
+                        /* 5. Menu saat di-HOVER */
+                        .fi-sidebar-item a:hover, 
+                        .fi-sidebar-item button:hover {
+                            background-color: #1e293b !important; /* Kotak dark navy terang */
+                            border-radius: 0.5rem !important;
+                        }
+                        .fi-sidebar-item a:hover *, 
+                        .fi-sidebar-item button:hover * {
+                            color: #ffffff !important; 
+                        }
+
+                        /* 6. Logo Teks di Pojok Kiri Atas */
+                        .fi-logo {
+                            color: #4248f9 !important;
+                        }
+                    </style>
+                ')
+            )
             // Sidebar bisa collapse
-            ->sidebarCollapsibleOnDesktop()
+        ->sidebarFullyCollapsibleOnDesktop()
 
             // Database Resource
             ->discoverResources(
