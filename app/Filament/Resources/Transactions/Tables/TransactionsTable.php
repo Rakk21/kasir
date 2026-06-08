@@ -5,6 +5,10 @@ namespace App\Filament\Resources\Transactions\Tables;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Tables\Filters\Filter;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\DatePicker;
+use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Exports\TransactionExporter;
 use Filament\Actions\ExportAction;
 use Filament\Actions\Exports\Enums\ExportFormat;
@@ -56,7 +60,36 @@ TextColumn::make('total')
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                Filter::make('periode')
+                    ->form([
+                        Select::make('periode')
+                            ->label('Periode Laporan')
+                            ->options([
+                                'hari' => 'Hari Ini',
+                                'minggu' => 'Minggu Ini',
+                                'bulan' => 'Bulan Ini',
+                            ])
+                            ->required(),
+                    ])
+                    ->query(function ($query, array $data) {
+                        if (($data['periode'] ?? null) === 'hari') {
+                            $query->whereDate('created_at', today());
+                        }
+
+                        if (($data['periode'] ?? null) === 'minggu') {
+                            $query->whereBetween('created_at', [
+                                now()->startOfWeek(),
+                                now()->endOfWeek(),
+                            ]);
+                        }
+
+                        if (($data['periode'] ?? null) === 'bulan') {
+                            $query->whereMonth('created_at', now()->month)
+                                  ->whereYear('created_at', now()->year);
+                        }
+
+                        return $query;
+                    }),
             ])
             ->recordActions([
                 ViewAction::make(),
